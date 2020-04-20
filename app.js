@@ -211,14 +211,14 @@ function handleDialogFlowAction(sender, action, messages, contexts, parameters) 
 }
 
 function handleMessage(message, sender) {
-  switch (message.message) {
-       case "text": //text
-           message.text.text.forEach((text) => {
-               if (text !== '') {
-                   sendTextMessage(sender, text);
-               }
-           });
-
+    switch (message.message) {
+        case "text": //text
+            message.text.text.forEach((text) => {
+                if (text !== '') {
+                    sendTextMessage(sender, text);
+                }
+            });
+            break;
         case "quickReplies": //quick replies
             let replies = [];
             message.quickReplies.quickReplies.forEach((text) => {
