@@ -194,6 +194,33 @@ function handleQuickReply(senderID, quickReply, messageId) {
     console.log("Quick reply for message %s with payload %s", messageId, quickReplyPayload);
     //send payload to api.ai
     sendToDialogFlow(senderID, quickReplyPayload);
+    switch (quickReplyPayload) {
+        case 'ONCE_PER_WEEK':
+            userService.newsletterSettings(function (updated) {
+                if (updated) {
+                    fbService.sendTextMessage(senderID, "Thank you for subscribing!" +
+                        "If you want to unsubscribe just write 'unsubscribe from newsletter'");
+                } else {
+                    fbService.sendTextMessage(senderID, "Newsletter is not available at this moment." +
+                        "Try again later!");
+                }
+            }, 1, senderID);
+            break;
+        case 'ONCE_PER_MONTH':
+            userService.newsletterSettings(function (updated) {
+                if (updated) {
+                    fbService.sendTextMessage(senderID, "Thank you for subscribing!" +
+                        "If you want to unsubscribe just write 'unsubscribe from newsletter'");
+                } else {
+                    fbService.sendTextMessage(senderID, "Newsletter is not available at this moment." +
+                        "Try again later!");
+                }
+            }, 2, senderID);
+            break;
+        default:
+            dialogflowService.sendTextQueryToDialogFlow(sessionIds, handleDialogFlowResponse, senderID, quickReplyPayload);
+            break;
+    }
 }
 
 //https://developers.facebook.com/docs/messenger-platform/webhook-reference/message-echo
@@ -715,8 +742,8 @@ function receivedPostback(event) {
     var payload = event.postback.payload;
 
     switch (payload) {
-      case 'Get_Started':
-             greetUserText(senderID);
+      case 'Newsletter':
+             sendNewsletterSubscribe(senderID);
              break;
             //unindentified payload
             sendTextMessage(senderID, "I'm not sure what you want. Can you be more specific?");
@@ -862,33 +889,75 @@ function isDefined(obj) {
     return obj != null;
 }
 
-function greetUserText(userId) {
-    //first read user firstname
-    request({
-        uri: 'https://graph.facebook.com/v6.0/' + userId,
-        qs: {
-            access_token: config.FB_PAGE_TOKEN
-        }
+function sendNewsletterSubscribe(userID){
+  let responseText = "I can forward you our newsletter which contains interesting hints and tips on how you can improve your business. How often would you like to receive them?"
+  let replies = [
+    {
+      "content_type": "text",
+      "title": "Once per week"
+      "payload": "ONCE_PER_WEEK"
+    },
+    "content_type": "text",
+    "title": "Once per month",
+    "payload": "ONCE_PER_MONTH"
+  }
+];
 
-    }, function (error, response, body) {
-        if (!error && response.statusCode == 200) {
-
-            var user = JSON.parse(body);
-
-            if (user.first_name) {
-                console.log("FB user: %s %s, %s",
-                    user.first_name, user.last_name, user.gender);
-
-                sendTextMessage(userId, "Hey " + user.first_name + 'what can I help you with today?');
-            } else {
-                console.log("Cannot get data for fb user with id",
-                    userId);
+readAllUsers: function(callback, newstype) {
+        var pool = new pg.Pool(config.PG_CONFIG);
+        pool.connect(function(err, client, done) {
+            if (err) {
+                return console.error('Error acquiring client', err.stack);
             }
-        } else {
-            console.error(response.error);
-        }
+            client
+                .query(
+                    'SELECT fb_id, first_name, last_name FROM users WHERE newsletter=$1',
+                    [newstype],
+                    function(err, result) {
+                        if (err) {
+                            console.log(err);
+                            callback([]);
+                        } else {
+                            callback(result.rows);
+                        };
+                    });
+        });
+        pool.end();
+    },
 
-    });
+    newsletterSettings: function(callback, setting, userId) {
+        var pool = new pg.Pool(config.PG_CONFIG);
+        pool.connect(function(err, client, done) {
+            if (err) {
+                return console.error('Error acquiring client', err.stack);
+            }
+
+            client
+                .query(
+                    'UPDATE users SET newsletter=$1 WHERE fb_id=$2',
+                    [setting, userId],
+                    function(err, result) {
+                        if (err) {
+                            console.log(err);
+                            callback(false);
+                        } else {
+                            callback(true);
+                        };
+                    });
+        });
+        pool.end();
+    }
+        }
+        }
+      }
+    )
+    }
+  })
+}
+fbService.sendQuickReply(userID, responseText, replies);
+    }
+  ]
+}
 
 }
 // Spin up the server
