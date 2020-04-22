@@ -404,46 +404,6 @@ async function sendToDialogFlow(sender, textString, params) {
     }
 
 }
-function greetUserText(userId) {
-			var user = JSON.parse(body);
-			console.log('getUserData: ' + user);
-			if (user.first_name) {
-				console.log("FB user: %s %s, %s",
-					user.first_name, user.last_name, user.profile_pic);
-
-                var pool = new pg.Pool(config.PG_CONFIG);
-                pool.connect(function(err, client, done) {
-                    if (err) {
-                        return console.error('Error acquiring client', err.stack);
-                    }
-                    var rows = [];
-                    client.query(`SELECT fb_id FROM users WHERE fb_id='${userId}' LIMIT 1`,
-                        function(err, result) {
-                            if (err) {
-                                console.log('Query error: ' + err);
-                            } else {
-
-                                if (result.rows.length === 0) {
-                                    let sql = 'INSERT INTO users (fb_id, first_name, last_name, profile_pic) ' +
-										'VALUES ($1, $2, $3, $4)';
-                                    client.query(sql,
-                                        [
-                                            userId,
-                                            user.first_name,
-                                            user.last_name,
-                                            user.profile_pic
-                                        ]);
-                                }
-                            }
-                        });
-
-                });
-                pool.end();
-
-				sendTextMessage(userId, "Welcome " + user.first_name + '! ' +
-                    'I can answer frequently asked questions for you ' +
-@@ -887,36 +919,6 @@ function receivedPostback(event) {
-
 
 
 function sendTextMessage(recipientId, text) {
@@ -793,7 +753,7 @@ function receivedPostback(event) {
     var payload = event.postback.payload;
 
     switch (payload) {
-      case 'Newsletter':
+      case 'Business_Newsletter':
              sendNewsletterSubscribe(senderID);
              break;
             //unindentified payload
@@ -954,6 +914,7 @@ function sendNewsletterSubscribe(userID){
   }
 ];
 fbService.sendQuickReply(userID, responseText, replies);
+}
 
 readAllUsers: function(callback, newstype) {
         var pool = new pg.Pool(config.PG_CONFIG);
@@ -1006,7 +967,7 @@ readAllUsers: function(callback, newstype) {
     }
   })
 }
-fbService.sendQuickReply(userID, responseText, replies);
+
     }
   ]
 }
