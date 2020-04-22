@@ -865,7 +865,7 @@ function isDefined(obj) {
 function greetUserText(userId) {
     //first read user firstname
     request({
-        uri: 'https://graph.facebook.com/v2.7/' + userId,
+        uri: 'https://graph.facebook.com/v6.0/' + userId,
         qs: {
             access_token: config.FB_PAGE_TOKEN
         }
