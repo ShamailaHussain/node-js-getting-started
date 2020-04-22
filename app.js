@@ -715,7 +715,8 @@ function receivedPostback(event) {
     var payload = event.postback.payload;
 
     switch (payload) {
-        default:
+        case: 'Machine_Learning':
+        sendToDialogFlow(senderID, 'machine learning')
             //unindentified payload
             sendTextMessage(senderID, "I'm not sure what you want. Can you be more specific?");
             break;
