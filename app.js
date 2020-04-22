@@ -6,10 +6,11 @@ const express = require('express');
 const crypto = require('crypto');
 const bodyParser = require('body-parser');
 const request = require('request');
+const pg = require(pg);
 const app = express();
 const uuid = require('uuid');
 
-
+pg.defaults.ssl = true;
 // Messenger API parameters
 if (!config.FB_PAGE_TOKEN) {
     throw new Error('missing FB_PAGE_TOKEN');
@@ -35,7 +36,9 @@ if (!config.FB_APP_SECRET) {
 if (!config.SERVER_URL) { //used for ink to static files
     throw new Error('missing SERVER_URL');
 }
-
+if (!config.PG_CONFIG) { //pg config
+    throw new Error('missing PG_CONFIG');
+}
 
 
 app.set('port', (process.env.PORT || 5000))
@@ -231,6 +234,16 @@ function handleEcho(messageId, appId, metadata) {
 
 function handleDialogFlowAction(sender, action, messages, contexts, parameters) {
     switch (action) {
+      case "unsubscribe":
+      userService.newsletterSettings(function(updates) {
+        if (updated){
+          fbService.sendTextMessage(sender, "You're unsubscribed- you can always come back!");
+        } else {
+          fbService.sendTextMessage(sender, "Newsletter is not available right now" + "Please try again later");
+        }
+      },0, sender);
+        }
+      }
         default:
             //unhandled action, just send back the text
             handleMessages(messages, sender);
@@ -391,7 +404,45 @@ async function sendToDialogFlow(sender, textString, params) {
     }
 
 }
+function greetUserText(userId) {
+			var user = JSON.parse(body);
+			console.log('getUserData: ' + user);
+			if (user.first_name) {
+				console.log("FB user: %s %s, %s",
+					user.first_name, user.last_name, user.profile_pic);
 
+                var pool = new pg.Pool(config.PG_CONFIG);
+                pool.connect(function(err, client, done) {
+                    if (err) {
+                        return console.error('Error acquiring client', err.stack);
+                    }
+                    var rows = [];
+                    client.query(`SELECT fb_id FROM users WHERE fb_id='${userId}' LIMIT 1`,
+                        function(err, result) {
+                            if (err) {
+                                console.log('Query error: ' + err);
+                            } else {
+
+                                if (result.rows.length === 0) {
+                                    let sql = 'INSERT INTO users (fb_id, first_name, last_name, profile_pic) ' +
+										'VALUES ($1, $2, $3, $4)';
+                                    client.query(sql,
+                                        [
+                                            userId,
+                                            user.first_name,
+                                            user.last_name,
+                                            user.profile_pic
+                                        ]);
+                                }
+                            }
+                        });
+
+                });
+                pool.end();
+
+				sendTextMessage(userId, "Welcome " + user.first_name + '! ' +
+                    'I can answer frequently asked questions for you ' +
+@@ -887,36 +919,6 @@ function receivedPostback(event) {
 
 
 
