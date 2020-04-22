@@ -718,8 +718,7 @@ function receivedPostback(event) {
       case: 'GET_STARTED'
       greetUserText(senderID);
       break;
-        case: 'Machine_Learning':
-        sendToDialogFlow(senderID, 'machine learning')
+
             //unindentified payload
             sendTextMessage(senderID, "I'm not sure what you want. Can you be more specific?");
             break;
