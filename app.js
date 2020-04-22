@@ -715,7 +715,7 @@ function receivedPostback(event) {
     var payload = event.postback.payload;
 
     switch (payload) {
-      case 'GET_STARTED':
+      case 'Get_Started':
              greetUserText(senderID);
              break;
             //unindentified payload
