@@ -953,6 +953,7 @@ function sendNewsletterSubscribe(userID){
     "payload": "ONCE_PER_MONTH"
   }
 ];
+fbService.sendQuickReply(userID, responseText, replies);
 
 readAllUsers: function(callback, newstype) {
         var pool = new pg.Pool(config.PG_CONFIG);
