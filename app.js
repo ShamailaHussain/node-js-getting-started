@@ -753,9 +753,11 @@ function receivedPostback(event) {
     var payload = event.postback.payload;
 
     switch (payload) {
-      case 'Business_Newsletter':
-             sendNewsletterSubscribe(senderID);
-             break;
+      case 'Businss_Newsletter':
+            sendNewsletterSubscribe(senderID);
+            break;
+
+      default:
             //unindentified payload
             sendTextMessage(senderID, "I'm not sure what you want. Can you be more specific?");
             break;
@@ -900,22 +902,24 @@ function isDefined(obj) {
     return obj != null;
 }
 
-function sendNewsletterSubscribe(userID){
-  let responseText = "I can forward you our newsletter which contains interesting hints and tips on how you can improve your business. How often would you like to receive them?"
-  let replies = [
-    {
-      "content_type": "text",
-      "title": "Once per week"
-      "payload": "ONCE_PER_WEEK"
-    },
-    "content_type": "text",
-    "title": "Once per month",
-    "payload": "ONCE_PER_MONTH"
-  }
-];
-fbService.sendQuickReply(userID, responseText, replies);
-}
+function sendNewsletterSubscribe(userId) {
+    let responseText = "You can subscribe to our newsletter here for the latest business growth hints and tips";
 
+    let replies = [
+        {
+            "content_type": "text",
+            "title": "Once per week",
+            "payload": "NEWS_PER_WEEK"
+        },
+        {
+            "content_type": "text",
+            "title": "Once per month",
+            "payload": "NEWS_PER_MONTH"
+        }
+    ];
+
+    fbService.sendQuickReply(userId, responseText, replies);
+}
 readAllUsers: function(callback, newstype) {
         var pool = new pg.Pool(config.PG_CONFIG);
         pool.connect(function(err, client, done) {
