@@ -6,7 +6,6 @@ const express = require('express');
 const crypto = require('crypto');
 const bodyParser = require('body-parser');
 const request = require('request');
-const pg = require(pg);
 const app = express();
 const uuid = require('uuid');
 
