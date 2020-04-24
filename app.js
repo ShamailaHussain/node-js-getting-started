@@ -6,6 +6,7 @@ const express = require('express');
 const crypto = require('crypto');
 const bodyParser = require('body-parser');
 const request = require('request');
+const pg = require(pg);
 const app = express();
 const uuid = require('uuid');
 
@@ -205,6 +206,34 @@ function handleEcho(messageId, appId, metadata) {
 
 function handleDialogFlowAction(sender, action, messages, contexts, parameters) {
     switch (action) {
+      case: "Get-Started":
+      handleMessages(messages, sender)
+
+      sendTypingOn(sender);
+
+      //ask what user wants to do next
+      setTimeout(function(){
+        let buttons = [
+          {
+          type:"postback",
+          title: "Newsletter",
+          payload: "BIZ_NEWSLETTER",
+        },
+        {
+        type:"postback",
+        title: "Calculations",
+        payload: "BIZ_CALC",
+      },
+      {
+      type:"postback",
+      title: "Business Growth Advice",
+      payload: "BIZ_ADVICE"
+    };
+
+        ]
+        sendButtonMessage(sender, "what would you like to do next?", buttons);
+      }, 3000)
+      break;
         default:
             //unhandled action, just send back the text
             handleMessages(messages, sender);
@@ -716,6 +745,9 @@ function receivedPostback(event) {
     var payload = event.postback.payload;
 
     switch (payload) {
+      case: 'BIZ_NEWSLETTER'
+       sendTextMessage(senderID, "Awesome, so I take it you would like to subscribe to our Newsletter?");
+       break;
         default:
             //unindentified payload
             sendTextMessage(senderID, "I'm not sure what you want. Can you be more specific?");
