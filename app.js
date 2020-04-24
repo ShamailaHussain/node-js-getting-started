@@ -78,7 +78,6 @@ const sessionClient = new dialogflow.SessionsClient(
 
 
 const sessionIds = new Map();
-
 // Index route
 app.get('/', function (req, res) {
     res.send('Hello world, I am a chat bot')
@@ -197,33 +196,6 @@ function handleQuickReply(senderID, quickReply, messageId) {
     console.log("Quick reply for message %s with payload %s", messageId, quickReplyPayload);
     //send payload to api.ai
     sendToDialogFlow(senderID, quickReplyPayload);
-    switch (quickReplyPayload) {
-        case 'ONCE_PER_WEEK':
-            userService.newsletterSettings(function (updated) {
-                if (updated) {
-                    fbService.sendTextMessage(senderID, "Thank you for subscribing!" +
-                        "If you want to unsubscribe just write 'unsubscribe from newsletter'");
-                } else {
-                    fbService.sendTextMessage(senderID, "Newsletter is not available at this moment." +
-                        "Try again later!");
-                }
-            }, 1, senderID);
-            break;
-        case 'ONCE_PER_MONTH':
-            userService.newsletterSettings(function (updated) {
-                if (updated) {
-                    fbService.sendTextMessage(senderID, "Thank you for subscribing!" +
-                        "If you want to unsubscribe just write 'unsubscribe from newsletter'");
-                } else {
-                    fbService.sendTextMessage(senderID, "Newsletter is not available at this moment." +
-                        "Try again later!");
-                }
-            }, 2, senderID);
-            break;
-        default:
-            dialogflowService.sendTextQueryToDialogFlow(sessionIds, handleDialogFlowResponse, senderID, quickReplyPayload);
-            break;
-    }
 }
 
 //https://developers.facebook.com/docs/messenger-platform/webhook-reference/message-echo
@@ -234,16 +206,6 @@ function handleEcho(messageId, appId, metadata) {
 
 function handleDialogFlowAction(sender, action, messages, contexts, parameters) {
     switch (action) {
-      case "unsubscribe":
-      userService.newsletterSettings(function(updates) {
-        if (updated){
-          fbService.sendTextMessage(sender, "You're unsubscribed- you can always come back!");
-        } else {
-          fbService.sendTextMessage(sender, "Newsletter is not available right now" + "Please try again later");
-        }
-      },0, sender);
-        }
-      }
         default:
             //unhandled action, just send back the text
             handleMessages(messages, sender);
@@ -404,6 +366,8 @@ async function sendToDialogFlow(sender, textString, params) {
     }
 
 }
+
+
 
 
 function sendTextMessage(recipientId, text) {
@@ -753,11 +717,7 @@ function receivedPostback(event) {
     var payload = event.postback.payload;
 
     switch (payload) {
-      case 'Businss_Newsletter':
-            sendNewsletterSubscribe(senderID);
-            break;
-
-      default:
+        default:
             //unindentified payload
             sendTextMessage(senderID, "I'm not sure what you want. Can you be more specific?");
             break;
@@ -902,81 +862,6 @@ function isDefined(obj) {
     return obj != null;
 }
 
-function sendNewsletterSubscribe(userId) {
-    let responseText = "You can subscribe to our newsletter here for the latest business growth hints and tips";
-
-    let replies = [
-        {
-            "content_type": "text",
-            "title": "Once per week",
-            "payload": "NEWS_PER_WEEK"
-        },
-        {
-            "content_type": "text",
-            "title": "Once per month",
-            "payload": "NEWS_PER_MONTH"
-        }
-    ];
-
-    fbService.sendQuickReply(userId, responseText, replies);
-}
-readAllUsers: function(callback, newstype) {
-        var pool = new pg.Pool(config.PG_CONFIG);
-        pool.connect(function(err, client, done) {
-            if (err) {
-                return console.error('Error acquiring client', err.stack);
-            }
-            client
-                .query(
-                    'SELECT fb_id, first_name, last_name FROM users WHERE newsletter=$1',
-                    [newstype],
-                    function(err, result) {
-                        if (err) {
-                            console.log(err);
-                            callback([]);
-                        } else {
-                            callback(result.rows);
-                        };
-                    });
-        });
-        pool.end();
-    },
-
-    newsletterSettings: function(callback, setting, userId) {
-        var pool = new pg.Pool(config.PG_CONFIG);
-        pool.connect(function(err, client, done) {
-            if (err) {
-                return console.error('Error acquiring client', err.stack);
-            }
-
-            client
-                .query(
-                    'UPDATE users SET newsletter=$1 WHERE fb_id=$2',
-                    [setting, userId],
-                    function(err, result) {
-                        if (err) {
-                            console.log(err);
-                            callback(false);
-                        } else {
-                            callback(true);
-                        };
-                    });
-        });
-        pool.end();
-    }
-        }
-        }
-      }
-    )
-    }
-  })
-}
-
-    }
-  ]
-}
-
-}
 // Spin up the server
 app.listen(app.get('port'), function () {
     console.log('running on port', app.get('port'))
